@@ -1,4 +1,4 @@
-
+.gitignore
 <?php
 // database.php
 $host = 'localhost';

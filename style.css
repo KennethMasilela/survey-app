@@ -37,7 +37,7 @@ nav a {
   margin-left: 25px;
   text-decoration: none;
   font-weight: bold;
-  color: #2196F3;
+  color: #2196F3; 
   border-bottom: 2px solid transparent;
   padding-bottom: 2px;
 }
@@ -47,7 +47,7 @@ nav a:hover {
 }
 
 nav a.active {
-  border-bottom: 2px solid #2196F3;
+  n                           : 2px solid #2196F3;
 }
 
 form.survey-form {

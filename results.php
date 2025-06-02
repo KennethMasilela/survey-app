@@ -1,32 +1,34 @@
 <?php
 require 'db.php';
 
-// Count total surveys
-$result = $conn->query("SELECT COUNT(*) as total FROM survey_responses");
-$total = $result->fetch_assoc()['total'];
+// Initialize values
+$total = $avgAge = $oldest = $youngest = 0;
+$pizzaPct = $pastaPct = $papPct = 0;
+$avgEatOut = $avgWatchMovies = $avgWatchTV = $avgRadio = 0;
 
-if ($total == 0) {
-    echo "<h3>No Surveys Available.</h3>";
-    echo "<a href='index.php'>Back to Survey</a>";
-    exit;
+// Total number of surveys
+$stmt = $pdo->query("SELECT COUNT(*) FROM survey_responses");
+$total = $stmt->fetchColumn();
+
+// If surveys exist, calculate stats
+if ($total > 0) {
+    $avgAge = round($pdo->query("SELECT AVG(age) FROM survey_responses")->fetchColumn(), 1);
+    $oldest = $pdo->query("SELECT MAX(age) FROM survey_responses")->fetchColumn();
+    $youngest = $pdo->query("SELECT MIN(age) FROM survey_responses")->fetchColumn();
+
+    $pizza = $pdo->query("SELECT COUNT(*) FROM survey_responses WHERE favorite_food LIKE '%Pizza%'")->fetchColumn();
+    $pasta = $pdo->query("SELECT COUNT(*) FROM survey_responses WHERE favorite_food LIKE '%Pasta%'")->fetchColumn();
+    $pap = $pdo->query("SELECT COUNT(*) FROM survey_responses WHERE favorite_food LIKE '%Pap and Wors%'")->fetchColumn();
+
+    $pizzaPct = round(($pizza / $total) * 100, 1);
+    $pastaPct = round(($pasta / $total) * 100, 1);
+    $papPct = round(($pap / $total) * 100, 1);
+
+    $avgWatchMovies = round($pdo->query("SELECT AVG(watch_movies_rating) FROM survey_responses")->fetchColumn(), 1);
+    $avgRadio = round($pdo->query("SELECT AVG(listen_radio_rating) FROM survey_responses")->fetchColumn(), 1);
+    $avgEatOut = round($pdo->query("SELECT AVG(eat_out_rating) FROM survey_responses")->fetchColumn(), 1);
+    $avgWatchTV = round($pdo->query("SELECT AVG(watch_tv_rating) FROM survey_responses")->fetchColumn(), 1);
 }
-
-// Average age
-$avgAge = $conn->query("SELECT AVG(age) as avg_age FROM survey_responses")->fetch_assoc()['avg_age'];
-
-// Oldest and youngest
-$maxAge = $conn->query("SELECT MAX(age) as max_age FROM survey_responses")->fetch_assoc()['max_age'];
-$minAge = $conn->query("SELECT MIN(age) as min_age FROM survey_responses")->fetch_assoc()['min_age'];
-
-// Percentage who like Pizza
-$pizzaCount = $conn->query("SELECT COUNT(*) as count FROM survey_responses WHERE favorite_food LIKE '%Pizza%'")->fetch_assoc()['count'];
-$pizzaPercent = round(($pizzaCount / $total) * 100, 1);
-
-// Average 'eat out' rating
-$eatOutAvg = $conn->query("SELECT AVG(eat_out_rating) as avg FROM survey_responses")->fetch_assoc()['avg'];
-$eatOutAvg = round($eatOutAvg, 1);
-
-$conn->close();
 ?>
 
 <!DOCTYPE html>
@@ -35,18 +37,89 @@ $conn->close();
   <meta charset="UTF-8">
   <title>Survey Results</title>
   <link rel="stylesheet" href="style.css">
+  <style>
+    .results-wrapper {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 50px;
+    }
+    .results-title {
+      text-align: center;
+      font-size: 24px;
+      margin-bottom: 40px;
+    }
+    .results-grid {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 20px 60px;
+      font-size: 16px;
+    }
+    .results-grid div {
+      padding: 4px 0;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+    header h2 {
+      margin: 0;
+      font-size: 20px;
+    }
+    nav a {
+      margin-left: 25px;
+      text-decoration: none;
+      font-weight: bold;
+      color: #2196F3;
+      border-bottom: 2px solid transparent;
+    }
+    nav a.active {
+      border-bottom: 2px solid #2196F3;
+    }
+    .no-data {
+      text-align: center;
+      font-size: 18px;
+      color: #777;
+      margin-top: 50px;
+    }
+  </style>
 </head>
 <body>
-  <h2>Survey Results</h2>
-  <ul>
-    <li><strong>Total Surveys:</strong> <?= $total ?></li>
-    <li><strong>Average Age:</strong> <?= round($avgAge, 1) ?></li>
-    <li><strong>Oldest Person:</strong> <?= $maxAge ?></li>
-    <li><strong>Youngest Person:</strong> <?= $minAge ?></li>
-    <li><strong>% Who Like Pizza:</strong> <?= $pizzaPercent ?>%</li>
-    <li><strong>Average 'Eat Out' Rating:</strong> <?= $eatOutAvg ?>/5</li>
-  </ul>
 
-  <a href="filloutform.php">Back to Survey</a>
+<div class="survey-wrapper">
+  <header>
+    <h2>_Surveys</h2>
+    <nav>
+      <a href="filloutform.php">FILL OUT SURVEY</a>
+      <a href="results.php" class="active">VIEW SURVEY RESULTS</a>
+    </nav>
+  </header>
+
+  <div class="results-wrapper">
+    <div class="results-title">Survey Results</div>
+
+    <?php if ($total == 0): ?>
+      <p class="no-data">No Surveys Available.</p>
+    <?php else: ?>
+      <div class="results-grid">
+        <div>Total number of surveys:</div>           <div><?= $total ?></div>
+        <div>Average Age:</div>                        <div><?= $avgAge ?></div>
+        <div>Oldest person who participated:</div>     <div><?= $oldest ?></div>
+        <div>Youngest person who participated:</div>   <div><?= $youngest ?></div>
+        <p><p>
+        <div>Percentage of people who like Pizza:</div>    <div><?= $pizzaPct ?>%</div>
+        <div>Percentage of people who like Pasta:</div>    <div><?= $pastaPct ?>%</div>
+        <div>Percentage of people who like Pap and Wors:</div> <div><?= $papPct ?>%</div>
+        <p><p>
+        <div>People who like to watch movies:</div>    <div><?= $avgWatchMovies ?></div>
+        <div>People who like to listen to radio:</div> <div><?= $avgRadio ?></div>
+        <div>People who like to eat out:</div>         <div><?= $avgEatOut ?></div>
+        <div>People who like to watch TV:</div>        <div><?= $avgWatchTV ?></div>
+      </div>
+    <?php endif; ?>
+  </div>
+</div>
+
 </body>
 </html>

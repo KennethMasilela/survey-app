@@ -67,16 +67,19 @@ if ($total > 0) {
       margin: 0;
       font-size: 20px;
     }
-    nav a {
+      nav a {
       margin-left: 25px;
       text-decoration: none;
       font-weight: bold;
-      color: #2196F3;
-      border-bottom: 2px solid transparent;
+      color: #141414; /* default color */
+      transition: color 0.3s ease;
     }
+
+    nav a:hover,
     nav a.active {
-      border-bottom: 2px solid #2196F3;
+      color: #2196F3; /* blue on hover or active */
     }
+
     .no-data {
       text-align: center;
       font-size: 18px;

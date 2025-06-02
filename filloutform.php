@@ -1,3 +1,8 @@
+<?php
+// Start session to optionally store messages (not used in this version)
+session_start();
+
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -16,7 +21,7 @@
       </nav>
     </header>
 
-    <form action="process_form.php" method="POST" class="survey-form">
+    <form id="survey-form" method="POST" class="survey-form">
 
       <!-- Personal Details -->
       <div class="form-section personal-details-section">
@@ -70,12 +75,12 @@
 
         <table>
           <colgroup>
-            <col style="width: 25%;">  <!-- 1st column: Question -->
-            <col style="width: 15%;">  <!-- 2nd column -->
-            <col style="width: 15%;">  <!-- 3rd column (same as 2nd) -->
-            <col style="width: 15%;">  <!-- 4th column (same as 2nd) -->
-            <col style="width: 15%;">  <!-- 5th column -->
-            <col style="width: 15%;">  <!-- 6th column -->
+            <col style="width: 25%;">
+            <col style="width: 15%;">
+            <col style="width: 15%;">
+            <col style="width: 15%;">
+            <col style="width: 15%;">
+            <col style="width: 15%;">
           </colgroup>
           <thead>
             <tr>
@@ -117,8 +122,41 @@
         <input type="submit" value="SUBMIT">
       </div>
 
+      <!-- Success/Error Message -->
+      <div id="form-message" style="text-align: center; font-weight: bold; margin-top: 15px;"></div>
+
     </form>
   </div>
+
+  <script>
+    document.getElementById("survey-form").addEventListener("submit", function (e) {
+      e.preventDefault();
+      const form = this;
+      const formData = new FormData(form);
+      const messageBox = document.getElementById("form-message");
+
+      fetch("process_form.php", {
+        method: "POST",
+        body: formData
+      })
+      .then(res => res.json())
+      .then(data => {
+        messageBox.textContent = data.message;
+        messageBox.style.color = data.success ? "green" : "red";
+        if (data.success) form.reset();
+        setTimeout(() => {
+          messageBox.textContent = "";
+        }, 3000);
+      })
+      .catch(err => {
+        messageBox.textContent = "Something went wrong.";
+        messageBox.style.color = "red";
+        setTimeout(() => {
+          messageBox.textContent = "";
+        }, 3000);
+      });
+    });
+  </script>
 
 </body>
 </html>

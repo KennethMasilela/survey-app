@@ -1,62 +1,61 @@
 <?php
 require 'db.php';
+header('Content-Type: application/json');
 
-// Sanitize inputs
-$name = trim($_POST['name']);
-$surname = trim($_POST['surname']); // You can include this in your form if needed
-$email = trim($_POST['email']);
-$contact = trim($_POST['contact']);
-$date = $_POST['date'];
-$food = isset($_POST['food']) ? implode(", ", $_POST['food']) : "";
-
-// Validation
 $errors = [];
 
-if (empty($name) || empty($email) || empty($contact) || empty($date)) {
+function sanitize($data) {
+    return htmlspecialchars(trim($data));
+}
+
+// Get inputs
+$name = sanitize($_POST['name'] ?? '');
+$email = sanitize($_POST['email'] ?? '');
+$contact = sanitize($_POST['contact'] ?? '');
+$dateOfBirth = $_POST['date'] ?? '';
+$food = isset($_POST['food']) ? implode(", ", $_POST['food']) : '';
+
+// Validate presence
+if (empty($name) || empty($email) || empty($contact) || empty($dateOfBirth)) {
     $errors[] = "Please fill in all personal details.";
 }
 
+// Validate contact number (10–15 digits)
 if (!preg_match('/^\d{10,15}$/', $contact)) {
     $errors[] = "Contact number must be 10 to 15 digits.";
 }
 
-// Calculate age from date of birth
+// Calculate age
 try {
-    $dob = new DateTime($date);
+    $dob = new DateTime($dateOfBirth);
     $today = new DateTime();
     $age = $today->diff($dob)->y;
 
     if ($age < 5 || $age > 120) {
-        $errors[] = "Your age (based on date of birth) must be between 5 and 120.";
+        $errors[] = "Your age must be between 5 and 120.";
     }
 } catch (Exception $e) {
-    $errors[] = "Invalid date of birth.";
+    $errors[] = "Invalid date format.";
 }
 
-// Validate radio inputs
-if (
-    !isset($_POST['eat_out']) ||
-    !isset($_POST['watch_movies']) ||
-    !isset($_POST['watch_tv']) ||
-    !isset($_POST['listen_radio'])
-) {
-    $errors[] = "Please provide all ratings.";
+// Validate rating selections
+$eat_out = intval($_POST['eat_out'] ?? 0);
+$watch_movies = intval($_POST['watch_movies'] ?? 0);
+$watch_tv = intval($_POST['watch_tv'] ?? 0);
+$listen_radio = intval($_POST['listen_radio'] ?? 0);
+
+if (!$eat_out || !$watch_movies || !$watch_tv || !$listen_radio) {
+    $errors[] = "Please select a rating for all activities.";
 }
 
+// Return errors if any
 if (!empty($errors)) {
-    echo "<h3>Errors:</h3><ul>";
-    foreach ($errors as $error) {
-        echo "<li>$error</li>";
-    }
-    echo "</ul><a href='filloutform.php'>Go back</a>";
+    echo json_encode([
+        'success' => false,
+        'message' => implode(" ", $errors)
+    ]);
     exit;
 }
-
-// Ratings
-$eat_out = intval($_POST['eat_out']);
-$watch_movies = intval($_POST['watch_movies']);
-$watch_tv = intval($_POST['watch_tv']);
-$listen_radio = intval($_POST['listen_radio']);
 
 // Insert into database using PDO
 try {
@@ -71,7 +70,7 @@ try {
         ':email' => $email,
         ':contact' => $contact,
         ':age' => $age,
-        ':date' => $date,
+        ':date' => $dateOfBirth,
         ':food' => $food,
         ':eat_out' => $eat_out,
         ':watch_movies' => $watch_movies,
@@ -79,11 +78,17 @@ try {
         ':listen_radio' => $listen_radio
     ]);
 
-    echo "<h3 style='color: green;'>✅ Survey submitted successfully!</h3>
-          <a href='filloutform.php'>Submit another</a> | 
-          <a href='results.php'>View Results</a>";
+    echo json_encode([
+        'success' => true,
+        'message' => "✅ Survey submitted successfully!"
+    ]);
+    exit;
 
 } catch (PDOException $e) {
-    echo "❌ Database error: " . $e->getMessage();
+    echo json_encode([
+        'success' => false,
+        'message' => "❌ Database error: " . $e->getMessage()
+    ]);
+    exit;
 }
 ?>

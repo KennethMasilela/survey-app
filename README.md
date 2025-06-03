@@ -36,8 +36,13 @@ This is a simple PHP and MySQL-based web application that allows users to fill o
     or download the ZIP file and extract it.
 
 2. **Start Apache and MySQL** using XAMPP Control Panel.
- 
-3. **Create the database**:
+    - Open the XAMPP Control Panel.
+    - Start the **Apache** and **MySQL** services.
+    - Ensure that the ports are set to default (Apache: 80, MySQL: 3306).
+3. **Open the project in your browser**:
+   Navigate to `http://localhost/surveyapp/filloutform.php` (or the folder name you used).
+
+4. **Create the database**:
 
    ```sql
    CREATE DATABASE survey_db;
